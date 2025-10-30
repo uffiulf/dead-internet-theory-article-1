@@ -5,6 +5,7 @@ import svgr from 'vite-plugin-svgr'
 import { imagetools } from 'vite-imagetools'
 import remarkSlug from 'remark-slug'
 import remarkAutolinkHeadings from 'remark-autolink-headings'
+import { remarkDirectives } from './src/mdx/remark-directives'
 import path from 'path'
 
 // https://vite.dev/config/
@@ -13,7 +14,7 @@ export default defineConfig({
   plugins: [
     react(),
     mdx({
-      remarkPlugins: [remarkSlug as any, remarkAutolinkHeadings as any],
+      remarkPlugins: [remarkSlug as any, remarkAutolinkHeadings as any, remarkDirectives as any],
     }),
     svgr(),
     imagetools(),
