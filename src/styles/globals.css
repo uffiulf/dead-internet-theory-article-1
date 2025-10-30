@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .prose-longread {
+    @apply prose prose-lg max-w-4xl mx-auto;
+    @apply prose-headings:font-semibold prose-headings:tracking-tight;
+    @apply prose-p:leading-relaxed prose-p:text-gray-700 dark:prose-p:text-gray-300;
+    @apply prose-a:text-blue-600 dark:prose-a:text-blue-400;
+    @apply prose-strong:font-bold;
+    @apply prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:rounded;
+    @apply prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950;
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', serif;
+  }
+}
