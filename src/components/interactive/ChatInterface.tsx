@@ -8,12 +8,14 @@ export default function ChatInterface({
   typingSound = false,
   autoscroll = true,
   bubbleMaxWidth = 640,
+  glitchOnLast = false,
 }: {
   lines: Line[]
   speed?: number
   typingSound?: boolean
   autoscroll?: boolean
   bubbleMaxWidth?: number
+  glitchOnLast?: boolean
 }) {
   const [index, setIndex] = useState(0)
   const [typing, setTyping] = useState(false)
@@ -69,7 +71,7 @@ export default function ChatInterface({
             aria-label={`${l.who === 'elias' ? 'Elias sier' : 'Journalist sier'} ${l.text}`}
             className={`rounded-lg px-3 py-2 text-sm ${
               l.who === 'journalist' ? 'bg-white/60 text-gray-900 dark:bg-white/10 dark:text-gray-100' : 'bg-blue-600 text-white ring-1 ring-blue-300/30'
-            }`}
+            } ${glitchOnLast && i === lines.length - 1 ? 'animate-[glitch_0.5s_linear_1]' : ''}`}
             style={{ maxWidth: bubbleMaxWidth }}
           >
             {l.text}
