@@ -44,9 +44,7 @@ export default function ChatInterface({
       cumulative[i] = v
       return v
     }, 0)
-    let gotEvent = false
     const onProgress = (e: Event) => {
-      gotEvent = true
       const p = Math.max(0, Math.min(1, (e as CustomEvent).detail?.progress ?? 0))
       const t = p * sum
       let k = 0
@@ -59,15 +57,8 @@ export default function ChatInterface({
       }
     }
     window.addEventListener('anim:progress', onProgress as any)
-    // Fallback: if no progress event arrives shortly, reveal all to avoid empty chat
-    const fallback = setTimeout(() => {
-      if (!gotEvent) {
-        setIndex(lines.length)
-      }
-    }, 1200)
     return () => {
       window.removeEventListener('anim:progress', onProgress as any)
-      clearTimeout(fallback)
     }
   }, [lines, speed, reduced, typingSound])
 

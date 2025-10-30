@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -15,7 +15,7 @@ export function Anim({ value, children }: CommonProps) {
   const preset = (value ?? '').trim()
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el || !preset) return
 
