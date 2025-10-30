@@ -124,6 +124,19 @@ export function Anim({ value, children }: CommonProps) {
       }
     }
 
+    // typewriter-effect+reveal-sequence: expose progress for children
+    if (preset.startsWith('typewriter-effect+reveal-sequence')) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 80%',
+        end: 'bottom 20%',
+        scrub: true,
+        onUpdate: (self) => {
+          el.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: self.progress }, bubbles: true }))
+        },
+      })
+    }
+
     return () => killAll()
   }, [preset])
 

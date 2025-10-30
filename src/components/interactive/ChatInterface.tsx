@@ -19,6 +19,7 @@ export default function ChatInterface({
 }) {
   const [index, setIndex] = useState(0)
   const [typing, setTyping] = useState(false)
+  const [popIndex, setPopIndex] = useState<number | null>(null)
   const reduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const logRef = useRef<HTMLDivElement>(null)
 
@@ -29,26 +30,37 @@ export default function ChatInterface({
   }
 
   useEffect(() => {
+    // Scroll-triggered progress from parent Anim: compute reveal based on cumulative delays
+    const host = logRef.current?.parentElement
+    if (!host) return
     if (reduced) {
       setIndex(lines.length)
       setTyping(false)
       return
     }
-    if (index >= lines.length) return
-    // typing indicator 400-800ms
-    setTyping(true)
-    const typingDelay = Math.round(400 + Math.random() * 400) / speed
-    const typingTimer = setTimeout(() => {
-      setTyping(false)
-      const d = Math.max(0, (lines[index].delay ?? 1200) / speed)
-      const postTimer = setTimeout(() => {
-        setIndex((i) => i + 1)
-        if (typingSound && !reduced) playTick()
-      }, d)
-      return () => clearTimeout(postTimer)
-    }, typingDelay)
-    return () => clearTimeout(typingTimer)
-  }, [index, lines, speed, reduced, typingSound])
+    const totals = lines.map((l) => Math.max(0, (l.delay ?? 1200) / speed))
+    const sum = totals.reduce((a, b) => a + b, 0) || 1
+    const cumulative: number[] = []
+    totals.reduce((acc, cur, i) => {
+      const v = acc + cur
+      cumulative[i] = v
+      return v
+    }, 0)
+    const onProgress = (e: Event) => {
+      const p = Math.max(0, Math.min(1, (e as CustomEvent).detail?.progress ?? 0))
+      const t = p * sum
+      let k = 0
+      while (k < cumulative.length && cumulative[k] <= t) k++
+      if (k !== index) {
+        setTyping(false)
+        setIndex(k)
+        setPopIndex(k - 1)
+        if (typingSound && k > 0) playTick()
+      }
+    }
+    host.addEventListener('anim:progress', onProgress as any)
+    return () => host.removeEventListener('anim:progress', onProgress as any)
+  }, [lines, speed, reduced, typingSound])
 
   useEffect(() => {
     if (!autoscroll) return
@@ -71,7 +83,7 @@ export default function ChatInterface({
             aria-label={`${l.who === 'elias' ? 'Elias sier' : 'Journalist sier'} ${l.text}`}
             className={`rounded-lg px-3 py-2 text-sm ${
               l.who === 'journalist' ? 'bg-white/60 text-gray-900 dark:bg-white/10 dark:text-gray-100' : 'bg-blue-600 text-white ring-1 ring-blue-300/30'
-            } ${glitchOnLast && i === lines.length - 1 ? 'animate-[glitch_0.5s_linear_1]' : ''}`}
+            } ${glitchOnLast && i === lines.length - 1 ? 'animate-[glitch_0.5s_linear_1]' : ''} ${popIndex === i ? 'animate-[chatPop_0.25s_ease-out_1]' : ''}`}
             style={{ maxWidth: bubbleMaxWidth }}
           >
             {l.text}
