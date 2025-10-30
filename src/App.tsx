@@ -1,6 +1,7 @@
 import { Helmet, HelmetProvider } from 'react-helmet-async'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 import ParallaxHero from './components/sections/ParallaxHero'
+import Article from './content/article.mdx'
 
 function App() {
   useSmoothScroll()
@@ -18,6 +19,9 @@ function App() {
       </Helmet>
       <div className="min-h-screen bg-white dark:bg-gray-900">
         <ParallaxHero />
+        <main className="prose-longread px-4 py-16">
+          <Article />
+        </main>
       </div>
     </HelmetProvider>
   )
