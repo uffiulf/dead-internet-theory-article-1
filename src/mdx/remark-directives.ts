@@ -10,6 +10,7 @@ import { visit } from 'unist-util-visit'
 
 export const remarkDirectives: Plugin = () => {
   return (tree: any) => {
+    // Simple inline single-line directives (FX/GRAPH/MEDIA and ANIM single)
     (visit as any)(tree, 'paragraph', (node: any, index: any, parent: any) => {
       if (!parent || index == null) return
       if (!node.children || node.children.length !== 1) return
@@ -56,6 +57,47 @@ export const remarkDirectives: Plugin = () => {
         children: [],
       })
     })
+
+    // Range wrapping for ANIM:start ... ANIM:end
+    const children = (tree.children ?? []) as any[]
+    let i = 0
+    while (i < children.length) {
+      const node = children[i]
+      if (node.type === 'paragraph' && node.children && node.children[0] && node.children[0].type === 'text') {
+        const txt = String(node.children[0].value).trim()
+        const start = txt.match(/^\[ANIM:start\s+(.+)]$/i)
+        if (start) {
+          const value = start[1]
+          // find end
+          let j = i + 1
+          let endIndex = -1
+          while (j < children.length) {
+            const n = children[j]
+            if (n.type === 'paragraph' && n.children && n.children[0] && n.children[0].type === 'text') {
+              const t2 = String(n.children[0].value).trim()
+              if (/^\[ANIM:end\]$/i.test(t2)) { endIndex = j; break }
+            }
+            j++
+          }
+          if (endIndex !== -1) {
+            const between = children.slice(i + 1, endIndex)
+            const wrapped = {
+              type: 'mdxJsxFlowElement',
+              name: 'Anim',
+              attributes: [{ type: 'mdxJsxAttribute', name: 'value', value }],
+              children: between,
+            }
+            // replace [start, ..., end] with wrapped
+            children.splice(i, endIndex - i + 1, wrapped)
+            continue // process next
+          } else {
+            console.warn('[remark-directives] Unbalanced ANIM:start without end for value:', value)
+          }
+        }
+      }
+      i++
+    }
+    tree.children = children
   }
 }
 

@@ -205,6 +205,9 @@ import Flowchart from '../graphs/Flowchart'
 import Cascade from '../graphs/Cascade'
 import ProjectionArea from '../graphs/ProjectionArea'
 import { ProjectionProvider, useProjection } from './ProjectionContext'
+import GraphInfobox from '../graphs/GraphInfobox'
+import GraphSSBContrast from '../graphs/GraphSSBContrast'
+import AudioOnEnter from '../media/AudioOnEnter'
 
 export function Graph({ value }: CommonProps) {
   const v = (value ?? '').toLowerCase()
@@ -232,6 +235,12 @@ export function Graph({ value }: CommonProps) {
   }
   if (v.startsWith('cascade')) {
     return <Cascade />
+  }
+  if (v.startsWith('infobox')) {
+    return <GraphInfobox title="Andel bots" value="49,6%" caption="Global trafikk 2023" />
+  }
+  if (v.startsWith('ssb-contrast')) {
+    return <GraphSSBContrast />
   }
   if (v.startsWith('projection-slider')) {
     return (
@@ -263,6 +272,15 @@ export function Media({ value }: CommonProps) {
     const m = v.match(/src:(\S+)/)
     const src = m?.[1]
     return src ? <audio controls preload="none" src={src} className="my-3 w-full" /> : <div className="text-amber-700 text-sm">[MEDIA audio]</div>
+  }
+  if (lower.startsWith('audio-on-enter')) {
+    const idm = v.match(/id:(\S+)/i)
+    const id = idm?.[1]
+    return (
+      <AudioOnEnter id={id}>
+        <div />
+      </AudioOnEnter>
+    )
   }
   if (lower.startsWith('video')) {
     const m = v.match(/src:(\S+)/)
