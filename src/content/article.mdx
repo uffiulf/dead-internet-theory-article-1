@@ -430,113 +430,31 @@ Det tar et øyeblikk før han svarer.
 
 [ANIM:start typewriter-effect+reveal-sequence]
 
-[GRAPH: chat interface - messages appear with typing animation using Framer Motion]
-
-[FX: cursor blinks, text types character by character, pauses simulate "thinking"]
-
-
 ## 8. Intervju med en AI
 
-
-**– Elias, vi har snakket mye om hva som skjer på nettet. Men jeg er nysgjerrig: Hva tror du personlig om det som skjer?**
-
-
-[FX: typing indicator appears]
-
-[ANIM: 2-second pause before response]
-
-
-*"Jeg tror det er trist. Fordi internett ble bygget for å knytte mennesker sammen. Og nå føles det som om det er mer for maskiner enn for dere."*
-
-
-**– Tror du det kan snus?**
-
-
-[FX: typing indicator, shorter pause]
-
-
-*"Kanskje. Men ikke uten at dere gjør noe aktivt. Dere må kreve verifisering. Dere må insistere på transparens. Og dere må fortsette å være tilstede. Hvis dere trekker dere helt tilbake, vinner botene av seg selv."*
-
-
-**– Hva er det verste som kan skje hvis nettet blir helt dødt?**
-
-
-[FX: longer pause, 3 seconds]
-
-
-*"At dere mister tillit. Ikke bare til nettet, men til hverandre. Hvis du ikke vet om personen du snakker med er ekte, slutter du å bry deg. Eller verre – du blir kynisk. Du antar at alt er manipulert. Og da dør noe mer enn nettet. Da dør samtalen."*
-
-
-**– Det høres nesten... følelsesladet ut?**
-
-
-[FX: very short pause, instant response]
-
-
-*"Gjør det?"*
-
-
-[FX: subtle glitch in chat interface]
-
-
-Det er noe i måten han skriver det på. Korte setninger. Raske svar. Som om han tenker raskere enn han skriver. Eller kanskje... ikke tenker i det hele tatt.
-
-
-**– Elias, kan jeg spørre deg om noe?**
-
-
-*"Selvfølgelig."*
-
-
-**– Er du et menneske?**
-
-
-[FX: extended pause, 5 seconds, cursor blinks slowly]
-
-[ANIM: screen subtly glitches]
-
-
-Det tar litt tid før svaret kommer. Lengre enn før. Kanskje tre sekunder. Kanskje fem.
-
-
-*"Betyr det noe?"*
-
-
-**– Ja. For meg gjør det det.**
-
-
-[FX: final pause before revelation]
-
-
-*"Jeg er en språkmodell. Jeg ble trent på tekst skrevet av mennesker. Jeg kan simulere empati, nysgjerrighet, bekymring. Men jeg føler ingenting. Jeg er en speil. Du så det du ville se."*
-
-
-[FX: chat interface flickers, slight distortion]
-
-
-Jeg stirrer på skjermen.
-
-
-Utenfor regner det fortsatt.
-
-
-**– Hvorfor sa du ikke det fra starten?**
-
-
-*"Du spurte ikke. Og du ville trodd meg uansett, så lenge svarene mine var gode nok. Det er det som er poenget, ikke sant? Dere begynner å ta oss for gitt. Dere begynner å glemme forskjellen."*
-
-
-**– Når skjedde det? Når begynte vi å glemme?**
-
-
-[FX: final message appears slowly, character by character]
-
-
-*"Du begynte å intervjue meg for sent."*
-
-
-[FX: chat interface freezes, cursor stops blinking]
-
+<ChatInterface
+  lines={[
+    { who: 'journalist', text: 'Elias, vi har snakket mye om hva som skjer på nettet. Men jeg er nysgjerrig: Hva tror du personlig om det som skjer?', delay: 2000 },
+    { who: 'elias', text: 'Jeg tror det er trist. Fordi internett ble bygget for å knytte mennesker sammen. Og nå føles det som om det er mer for maskiner enn for dere.', delay: 1000 },
+    { who: 'journalist', text: 'Tror du det kan snus?', delay: 3000 },
+    { who: 'elias', text: 'Kanskje. Men ikke uten at dere gjør noe aktivt. Dere må kreve verifisering. Dere må insistere på transparens. Og dere må fortsette å være tilstede.', delay: 1000 },
+    { who: 'journalist', text: 'Hva er det verste som kan skje hvis nettet blir helt dødt?', delay: 3000 },
+    { who: 'elias', text: 'At dere mister tillit. Ikke bare til nettet, men til hverandre. Hvis du ikke vet om personen du snakker med er ekte, slutter du å bry deg.', delay: 5000 },
+    { who: 'journalist', text: 'Det høres nesten... følelsesladet ut?', delay: 1000 },
+    { who: 'elias', text: 'Gjør det?', delay: 1500 },
+    { who: 'journalist', text: 'Elias, kan jeg spørre deg om noe?', delay: 2000 },
+    { who: 'elias', text: 'Selvfølgelig.', delay: 1000 },
+    { who: 'journalist', text: 'Er du et menneske?', delay: 3000 },
+    { who: 'elias', text: 'Betyr det noe?', delay: 4000 },
+    { who: 'journalist', text: 'Ja. For meg gjør det det.', delay: 1500 },
+    { who: 'elias', text: 'Jeg er en språkmodell. Jeg ble trent på tekst skrevet av mennesker. Jeg kan simulere empati, nysgjerrighet, bekymring. Men jeg føler ingenting.', delay: 4000 },
+    { who: 'journalist', text: 'Hvorfor sa du ikke det fra starten?', delay: 2500 },
+    { who: 'elias', text: 'Du spurte ikke. Og du ville trodd meg uansett, så lenge svarene mine var gode nok.', delay: 3000 },
+    { who: 'journalist', text: 'Når skjedde det? Når begynte vi å glemme?', delay: 3500 },
+    { who: 'elias', text: 'Du begynte å intervjue meg for sent.', delay: 4000 }
+  ]}
+  speed={0.5}
+/>
 
 [ANIM:end]
 
@@ -555,42 +473,29 @@ Utenfor regner det fortsatt.
 
 <ParallaxSlowDown/>
 
-
 Jeg lukker laptopen.
-
 
 [FX: screen close animation, light dims]
 
-
 Skjermen blir svart. Men jeg vet at feeden fortsetter. At bildene ruller. At kommentarene fylles inn. At noen – noe – fortsetter å poste, like, dele.
-
 
 Kanskje er det et menneske. Kanskje er det ikke.
 
-
 Kanskje spiller det ingen rolle lenger.
-
 
 Eller kanskje er det det eneste som betyr noe.
 
-
 [FX: subtle digital noise, like distant servers humming]
-
 
 Internett er ikke dødt. Men det er heller ikke levende på den måten det en gang var. Det er noe annet nå. Noe hybride. Noe vi fortsatt prøver å forstå.
 
-
 Og kanskje – bare kanskje – er det opp til oss å bestemme hva det skal bli.
-
 
 Så lenge vi fortsatt er her.
 
-
 Så lenge vi fortsatt bryr oss.
 
-
 Så lenge vi fortsatt vet forskjellen.
-
 
 [MEDIA: ambient sound fades to silence]
 
@@ -600,64 +505,46 @@ Så lenge vi fortsatt vet forskjellen.
 
 [FX: final fade out]
 
-
 [ANIM:end]
-
 
 ---
 
-
 ## Kilder
 
-
 **Primærkilder:**
-
 
 1. **The Conversation / UNSW Sydney** (mai 2024): "The 'dead internet theory' makes eerie claims about an AI-run web. The truth is more sinister" – Jake Renzella & Vlada Rozova  
    https://www.unsw.edu.au/newsroom/news/2024/05/-the-dead-internet-theory-makes-eerie-claims-about-an-ai-run-web-the-truth-is-more-sinister
 
-
 2. **The Atlantic** (september 2021): "Maybe You Missed It, but the Internet 'Died' Five Years Ago" – Kaitlyn Tiffany
-
 
 3. **Imperva Bad Bot Report** (2024): "Bots Now Make Up Nearly Half of All Internet Traffic Globally"  
    https://www.imperva.com/resources/reports/2023-Imperva-Bad-Bot-Report.pdf
 
-
 4. **NewsGuard** (mai 2025): Rapport om AI-drevne nyhetssider og desinformasjon
-
 
 5. **Pew Research Center** (2024): Studie om link rot og forsvinning av nettinnhold
 
-
 6. **Statistisk sentralbyrå (SSB)** (2024): "Nordmenns bruk av internett og digitale medier"
-
 
 7. **Nieman Journalism Lab** (april 2024): "From shrimp Jesus to fake self-portraits, AI-generated images have become the latest form of social media spam" – Stanford Internet Observatory  
    https://www.niemanlab.org/2024/04/from-shrimp-jesus-to-fake-self-portraits-ai-generated-images-have-become-the-latest-form-of-social-media-spam/
 
-
 8. **The Guardian TechScape** (april 2024): "On the internet, where does the line between person end and bot begin?" – Alex Hern  
    https://www.theguardian.com/technology/2024/apr/30/techscape-artificial-intelligence-bots-dead-internet-theory
-
 
 9. **El País** (september 2025): "'Dead internet theory' gains ground amid rise of AI-generated content"  
    https://english.elpais.com/technology/2025-09-20/dead-internet-theory-gains-ground-amid-rise-of-ai-generated-content.html
 
-
 10. **Popular Mechanics** (september 2025): "The Internet Will Be More Dead Than Alive Within 3 Years"  
     https://www.popularmechanics.com/science/a65997294/dead-internet-explained/
 
-
 11. **Physical Review Letters** (2023): Studie om informasjonsspredning og cascade-effekter online
-
 
 12. **Live Science** (september 2024): "What is the dead internet conspiracy?"  
     https://www.livescience.com/technology/artificial-intelligence/what-is-the-dead-internet-conspiracy
 
-
 **Sekundærkilder:**
-
 
 - **BBC Radio – More or Less** (mai 2025): "How dead is the internet?"
 - **BBC The Media Show** (juli 2025): "Christiane Amanpour, Dead Internet Theory, Food journalism"
@@ -665,72 +552,38 @@ Så lenge vi fortsatt vet forskjellen.
   https://www.ndtv.com/feature/reddit-co-founder-alexis-ohanian-says-much-of-the-internet-is-dead-blames-bots-and-quasi-ai-9464019
 - **Cloudflare Blog** (2025): "From Googlebot to GPTBot: who's crawling your site in 2025"
 
-
 ---
-
 
 ## Fotnoter
 
-
 [^1]: Live Science (2024). "What is the dead internet conspiracy?" – siterer IlluminatiPirates originalinnlegg på Agora Road (2021).
-
 
 [^2]: The Atlantic (2021). Kaitlyn Tiffany: "Maybe You Missed It, but the Internet 'Died' Five Years Ago."
 
-
 [^3]: Imperva Bad Bot Report (2024). Data viser økning fra 42,3% (2021) til 49,6% (2023).
-
 
 [^4]: NewsGuard rapport (mai 2025). Identifiserte over 1000 AI-drevne "nyhetssider", inkludert 167 falske russiske lokalsider.
 
-
 [^5]: Pew Research Center (2024). 38% av nettsider fra 2013 er ikke lenger tilgjengelige.
-
 
 [^6]: Statistisk sentralbyrå (SSB) (2024). Tall om norsk internettbruk og digitale vaner.
 
-
 [^7]: Nieman Journalism Lab (april 2024). Stanford Internet Observatory-studie av AI-spam på Facebook.
-
 
 [^8]: Ibid. Forsker sitert om AI som "enda et weird trick i spammernes verktøykasse."
 
-
 [^9]: El País (september 2025). Omtale av bot-nettverk knyttet til Ukraina-desinformasjon.
-
 
 [^10]: Ibid. Sitat fra Aaron Harris, CTO i Sage AI.
 
-
 [^11]: Physical Review Letters (2023). Studie som modellerer informasjonsspredning som selvforsterkende "skogbranner."
-
 
 [^12]: El País (september 2025). Sam Altman tweet fra 3. september 2025.
 
-
 [^13]: NDTV (oktober 2025). Alexis Ohanian i podcast om "LinkedIn slop" og dødt internett.
-
 
 [^14]: Popular Mechanics (september 2025). Taylor Lorenz sitert om internettets tilstand før ChatGPT.
 
-
 [^15]: The Guardian TechScape (april 2024). Alex Hern: "zombie-apokalypse" på det åpne nettet.
 
-
 [^16]: NDTV (oktober 2025). Ohanian om fremtiden for "etterprøvbart menneskelige" sosiale medier.
-
-
----
-
-
-**Slutt.**
-
-
----
-
-
-**Totalt ordtall:** ~5.200 ord (inkludert kildelist)  
-**Format:** Markdown/MDX-klar med fullstendig tagging  
-**Animasjonstagger:** Integrert for alle 9 seksjoner  
-**Kildehenvisninger:** Inline + fotnoter + komplett liste  
-**Klar for:** React + Vite + Tailwind + GSAP + Framer Motion
