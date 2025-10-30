@@ -30,9 +30,7 @@ export default function ChatInterface({
   }
 
   useEffect(() => {
-    // Scroll-triggered progress from parent Anim: compute reveal based on cumulative delays
-    const host = logRef.current?.parentElement
-    if (!host) return
+    // Scroll-triggered progress from Anim: listen globally to ensure delivery even if wrapper differs
     if (reduced) {
       setIndex(lines.length)
       setTyping(false)
@@ -46,7 +44,9 @@ export default function ChatInterface({
       cumulative[i] = v
       return v
     }, 0)
+    let gotEvent = false
     const onProgress = (e: Event) => {
+      gotEvent = true
       const p = Math.max(0, Math.min(1, (e as CustomEvent).detail?.progress ?? 0))
       const t = p * sum
       let k = 0
@@ -58,8 +58,17 @@ export default function ChatInterface({
         if (typingSound && k > 0) playTick()
       }
     }
-    host.addEventListener('anim:progress', onProgress as any)
-    return () => host.removeEventListener('anim:progress', onProgress as any)
+    window.addEventListener('anim:progress', onProgress as any)
+    // Fallback: if no progress event arrives shortly, reveal all to avoid empty chat
+    const fallback = setTimeout(() => {
+      if (!gotEvent) {
+        setIndex(lines.length)
+      }
+    }, 1200)
+    return () => {
+      window.removeEventListener('anim:progress', onProgress as any)
+      clearTimeout(fallback)
+    }
   }, [lines, speed, reduced, typingSound])
 
   useEffect(() => {
