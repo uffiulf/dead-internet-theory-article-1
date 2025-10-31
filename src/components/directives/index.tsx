@@ -71,6 +71,7 @@ export function Anim({ value, children }: CommonProps) {
           onUpdate: (self) => {
             const p = self.progress
             el.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: p }, bubbles: true }))
+            window.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: p } }))
           },
         })
         gsap.to(container, { x: () => -totalWidth, ease: 'none', scrollTrigger: st })
@@ -132,7 +133,9 @@ export function Anim({ value, children }: CommonProps) {
         end: 'bottom 20%',
         scrub: true,
         onUpdate: (self) => {
-          el.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: self.progress }, bubbles: true }))
+          const p = self.progress
+          el.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: p }, bubbles: true }))
+          window.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: p } }))
         },
       })
     }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -11,7 +11,7 @@ export default function ParallaxHero() {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const section = sectionRef.current
     const title = titleRef.current
     const image = imageRef.current

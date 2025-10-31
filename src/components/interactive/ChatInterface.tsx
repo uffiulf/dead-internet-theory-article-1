@@ -44,19 +44,33 @@ export default function ChatInterface({
       cumulative[i] = v
       return v
     }, 0)
+    
+    let lastProgress = -1
     const onProgress = (e: Event) => {
       const p = Math.max(0, Math.min(1, (e as CustomEvent).detail?.progress ?? 0))
+      if (p === lastProgress) return
+      lastProgress = p
+      
       const t = p * sum
       let k = 0
       while (k < cumulative.length && cumulative[k] <= t) k++
-      if (k !== index) {
+      if (k !== index && k <= lines.length) {
         setTyping(false)
         setIndex(k)
-        setPopIndex(k - 1)
+        if (k > 0) setPopIndex(k - 1)
         if (typingSound && k > 0) playTick()
       }
     }
-    window.addEventListener('anim:progress', onProgress as any)
+    window.addEventListener('anim:progress', onProgress as any, { passive: true })
+    
+    // Initial check: if we're already past start, show first message
+    const checkInit = () => {
+      const evt = new Event('anim:progress') as any
+      evt.detail = { progress: 0 }
+      onProgress(evt)
+    }
+    checkInit()
+    
     return () => {
       window.removeEventListener('anim:progress', onProgress as any)
     }

@@ -28,21 +28,34 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
 
     ScrollTrigger.scrollerProxy(document.body, {
       scrollTop(value) {
-        if (arguments.length && typeof value === 'number') lenis.scrollTo(value)
-        return window.scrollY || 0
+        if (arguments.length && typeof value === 'number') {
+          lenis.scrollTo(value, { immediate: true })
+        }
+        return lenis.scroll
       },
       getBoundingClientRect() {
         return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight }
       },
     })
 
-    gsap.ticker.add((t) => lenis.raf(t * 1000))
+    ScrollTrigger.defaults({ scroller: document.body })
+
+    // RAF loop for Lenis
+    function raf(time: number) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+    requestAnimationFrame(raf)
+
+    // Also use GSAP ticker for integration
+    const tickerFn = (t: number) => lenis.raf(t * 1000)
+    gsap.ticker.add(tickerFn)
     gsap.ticker.lagSmoothing(0)
 
     return () => {
       lenis.off('scroll', onScroll)
+      gsap.ticker.remove(tickerFn)
       lenis.destroy()
-      gsap.ticker.remove((t) => lenis.raf(t * 1000))
     }
   }, [])
 
