@@ -30,13 +30,14 @@ export function Anim({ value, children }: CommonProps) {
     if (preset.startsWith('parallax+fade-in')) {
       const media = el.querySelector('[data-parallax]') as HTMLElement | null
       
-      // Fade in container
+      // Fade in container with scale
       const fadeIn = gsap.fromTo(
         el,
-        { autoAlpha: 0, y: 50 },
+        { autoAlpha: 0, y: 50, scale: 0.95 },
         {
           autoAlpha: 1,
           y: 0,
+          scale: 1,
           duration: 1.5,
           ease: 'power3.out',
           scrollTrigger: {
@@ -48,11 +49,13 @@ export function Anim({ value, children }: CommonProps) {
         },
       )
       
-      // Parallax image
+      // Parallax image with stronger effect
       if (media) {
+        media.style.willChange = 'transform'
         const parallax = gsap.to(media, {
-          yPercent: -30,
-          scale: 1.1,
+          yPercent: -35,
+          scale: 1.15,
+          rotation: 0.5,
           ease: 'none',
           scrollTrigger: {
             trigger: el,
