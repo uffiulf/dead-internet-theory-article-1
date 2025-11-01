@@ -534,7 +534,7 @@ import AudioOnEnter from '../media/AudioOnEnter'
 
 export function Graph({ value }: CommonProps) {
   const v = (value ?? '').toLowerCase()
-  if (v.startsWith('humans-vs-bots')) {
+  if (v.startsWith('humans-vs-bots') || v.includes('line chart')) {
     const data = [
       { year: 2013, humans: 60, bots: 40 },
       { year: 2018, humans: 56, bots: 44 },
@@ -556,7 +556,7 @@ export function Graph({ value }: CommonProps) {
   if (v.startsWith('flowchart')) {
     return <Flowchart />
   }
-  if (v.startsWith('cascade')) {
+  if (v.startsWith('cascade') || v.includes('cascade model')) {
     return <Cascade />
   }
   if (v.startsWith('infobox')) {
@@ -565,7 +565,7 @@ export function Graph({ value }: CommonProps) {
   if (v.startsWith('ssb-contrast')) {
     return <GraphSSBContrast />
   }
-  if (v.startsWith('projection-slider')) {
+  if (v.startsWith('projection-slider') || v.includes('interactive timeline slider')) {
     return (
       <ProjectionProvider>
         <ProjectionSlider />
@@ -573,28 +573,63 @@ export function Graph({ value }: CommonProps) {
       </ProjectionProvider>
     )
   }
-  return <div className="text-sm text-emerald-700">[GRAPH unsupported]: {value}</div>
+  if (v.includes('d3') || v.includes('force-directed') || v.includes('information spread')) {
+    return <Cascade />
+  }
+  if (v.includes('quote card')) {
+    // Quote cards are handled by Media component, but we can show a placeholder here
+    return (
+      <div className="my-4 rounded border border-gray-300 bg-gray-50 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        💬 Quote card
+      </div>
+    )
+  }
+  if (v.includes('projection visualization')) {
+    return (
+      <ProjectionProvider>
+        <ProjectionArea />
+      </ProjectionProvider>
+    )
+  }
+  // Fallback for unsupported graphs
+  return (
+    <div className="my-6 rounded border border-dashed border-emerald-300/60 bg-emerald-50/40 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:text-emerald-200">
+      <strong>GRAPH</strong>: {value}
+    </div>
+  )
 }
 
 export function Media({ value }: CommonProps) {
   const v = (value ?? '')
   const lower = v.toLowerCase()
   if (lower.startsWith('photo')) {
-    // Expecting: photo "Title" src:<url>
+    // Expecting: photo "Title" src:<url> OR photo "Title" - description (fallback to placeholder)
     const m = v.match(/src:(\S+)/)
     const src = m?.[1]
     const altMatch = v.match(/"([^"]+)"/)
     const alt = altMatch?.[1] ?? 'photo'
-    return src ? (
-      <img data-parallax alt={alt} src={src} loading="lazy" className="mx-auto my-4 w-full max-w-3xl rounded" />
-    ) : (
-      <div className="text-amber-700 text-sm">[MEDIA photo] {alt}</div>
-    )
+    if (src) {
+      return (
+        <img data-parallax alt={alt} src={src} loading="lazy" className="mx-auto my-4 w-full max-w-3xl rounded" />
+      )
+    } else {
+      // Fallback: show placeholder with description
+      return (
+        <div className="mx-auto my-4 w-full max-w-3xl rounded border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800">
+          <div className="text-sm text-gray-500 dark:text-gray-400">📷 {alt}</div>
+          <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">{v.replace(/photo\s+"[^"]+"\s*/, '').trim()}</div>
+        </div>
+      )
+    }
   }
   if (lower.startsWith('audio')) {
     const m = v.match(/src:(\S+)/)
     const src = m?.[1]
-    return src ? <audio controls preload="none" src={src} className="my-3 w-full" /> : <div className="text-amber-700 text-sm">[MEDIA audio]</div>
+    return src ? <audio controls preload="none" src={src} className="my-3 w-full" /> : (
+      <div className="my-3 rounded border border-gray-300 bg-gray-50 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        🎵 {v.replace(/audio\s+/, '').trim()}
+      </div>
+    )
   }
   if (lower.startsWith('audio-on-enter')) {
     const idm = v.match(/id:(\S+)/i)
@@ -611,7 +646,9 @@ export function Media({ value }: CommonProps) {
     return src ? (
       <video className="my-3 w-full rounded" src={src} autoPlay muted playsInline controls />
     ) : (
-      <div className="text-amber-700 text-sm">[MEDIA video]</div>
+      <div className="my-3 rounded border border-gray-300 bg-gray-50 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        🎬 {v.replace(/video\s+/, '').trim()}
+      </div>
     )
   }
   if (lower.startsWith('quote-card')) {
@@ -624,7 +661,12 @@ export function Media({ value }: CommonProps) {
       </blockquote>
     )
   }
-  return <div className="text-amber-700 text-sm">[MEDIA unsupported]: {value}</div>
+  // Fallback for unsupported media types
+  return (
+    <div className="my-4 rounded border border-dashed border-amber-300/60 bg-amber-50/40 px-3 py-2 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200">
+      <strong>MEDIA</strong>: {value}
+    </div>
+  )
 }
 
 function ProjectionSlider() {

@@ -54,6 +54,8 @@ export default function ChatInterface({
       const t = p * sum
       let k = 0
       while (k < cumulative.length && cumulative[k] <= t) k++
+      // Ensure at least first message shows when progress > 0
+      if (p > 0 && k === 0) k = 1
       if (k !== index && k <= lines.length) {
         setTyping(false)
         setIndex(k)
