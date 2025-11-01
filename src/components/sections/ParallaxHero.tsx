@@ -10,50 +10,82 @@ export default function ParallaxHero() {
   const sectionRef = useRef<HTMLElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
+  const particlesRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     const section = sectionRef.current
     const title = titleRef.current
     const image = imageRef.current
+    const particles = particlesRef.current
 
     if (!section || !title || !image) return
 
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) {
+      gsap.set([title, image], { opacity: 1 })
+      return
+    }
+
     const ctx = gsap.context(() => {
-      // Pin the section
+      // Pin the section with smooth pinning
       ScrollTrigger.create({
         trigger: section,
         start: 'top top',
-        end: '+=200%',
+        end: '+=250%',
         pin: true,
+        pinSpacing: true,
         anticipatePin: 1,
+        markers: false,
       })
 
-      // Parallax title
+      // Title animation: fade and move up
       gsap.to(title, {
-        y: -100,
+        y: -150,
         opacity: 0,
+        scale: 0.8,
+        ease: 'none',
         scrollTrigger: {
           trigger: section,
           start: 'top top',
           end: 'bottom top',
-          scrub: true,
+          scrub: 1,
+          markers: false,
         },
       })
 
-      // Parallax image
+      // Background parallax with scale
       gsap.to(image, {
-        y: -200,
-        scale: 1.2,
+        y: -250,
+        scale: 1.4,
+        opacity: 0.3,
+        ease: 'none',
         scrollTrigger: {
           trigger: section,
           start: 'top top',
           end: 'bottom top',
-          scrub: true,
+          scrub: 1,
+          markers: false,
         },
       })
-      
-      // Refresh ScrollTrigger after setting up animations
-      ScrollTrigger.refresh()
+
+      // Particles animation if exists
+      if (particles) {
+        gsap.to(particles, {
+          opacity: 0,
+          y: -100,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+          },
+        })
+      }
+
+      // Refresh after setup
+      setTimeout(() => ScrollTrigger.refresh(), 100)
     }, section)
 
     return () => ctx.revert()
@@ -62,17 +94,36 @@ export default function ParallaxHero() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-900 to-black"
+      className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-900 via-black to-black"
     >
+      {/* Animated background layers */}
       <div
         ref={imageRef}
-        className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"
+        className="absolute inset-0 bg-gradient-to-r from-blue-600/30 via-purple-600/20 to-pink-600/30"
+        style={{ willChange: 'transform' }}
       />
+      
+      {/* Particle effect */}
+      <div
+        ref={particlesRef}
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: `radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 1px, transparent 1px),
+                             radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 1px, transparent 1px),
+                             radial-gradient(circle at 40% 20%, rgba(255,255,255,0.08) 1px, transparent 1px)`,
+          backgroundSize: '200px 200px, 300px 300px, 150px 150px',
+          willChange: 'transform',
+        }}
+      />
+
+      {/* Title */}
       <h1
         ref={titleRef}
-        className="relative z-10 text-6xl md:text-8xl font-bold text-white text-center"
+        className="relative z-10 text-6xl md:text-8xl font-bold text-white text-center px-4"
+        style={{ willChange: 'transform, opacity' }}
       >
-        Dead Internet Theory
+        <span className="block mb-2">Dead Internet</span>
+        <span className="block text-5xl md:text-7xl opacity-90">Theory</span>
       </h1>
     </section>
   )

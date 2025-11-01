@@ -18,25 +18,49 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) {
       console.info('[ScrollProvider] reduced motion – disabling Lenis')
+      ScrollTrigger.refresh()
       return
     }
-    const lenis = new Lenis({ duration: 1.1, smoothWheel: true })
+
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+      infinite: false,
+    })
+
     lenisRef.current = lenis
 
-    const onScroll = () => ScrollTrigger.update()
-    lenis.on('scroll', onScroll)
+    // RAF loop - CRITICAL for Lenis to work
+    function raf(time: number) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+    requestAnimationFrame(raf)
 
+    // Update ScrollTrigger on every scroll
+    lenis.on('scroll', ScrollTrigger.update)
+
+    // Setup ScrollTrigger proxy
     ScrollTrigger.scrollerProxy(document.body, {
       scrollTop(value) {
         if (arguments.length && typeof value === 'number') {
-          lenis.scrollTo(value, { immediate: true })
+          lenis.scrollTo(value, { immediate: false })
         }
         return lenis.scroll
       },
       getBoundingClientRect() {
-        return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight }
+        return {
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }
       },
-      // Add scrollHeight for proper calculation
       scrollHeight() {
         return document.documentElement.scrollHeight
       },
@@ -44,37 +68,22 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
 
     ScrollTrigger.defaults({ scroller: document.body })
 
-    // Wait for DOM to be ready, then refresh ScrollTrigger
-    const refreshScrollTrigger = () => {
-      // Wait a bit for all components to mount
+    // Refresh ScrollTrigger after setup
+    const refresh = () => {
       setTimeout(() => {
         ScrollTrigger.refresh()
-      }, 200)
+      }, 100)
     }
-    
-    // Initial refresh after setup
-    refreshScrollTrigger()
-    
-    // Also refresh when DOM is ready
+    refresh()
+
+    // Refresh on load
     if (document.readyState === 'complete') {
-      refreshScrollTrigger()
+      refresh()
     } else {
-      window.addEventListener('load', refreshScrollTrigger)
+      window.addEventListener('load', refresh, { once: true })
     }
 
-    // RAF loop for Lenis
-    function raf(time: number) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-    requestAnimationFrame(raf)
-
-    // Also use GSAP ticker for integration
-    const tickerFn = (t: number) => lenis.raf(t * 1000)
-    gsap.ticker.add(tickerFn)
-    gsap.ticker.lagSmoothing(0)
-
-    // Refresh ScrollTrigger on window resize
+    // Refresh on resize
     const handleResize = () => {
       ScrollTrigger.refresh()
     }
@@ -84,9 +93,7 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('orientationchange', handleResize)
-      window.removeEventListener('load', refreshScrollTrigger)
-      lenis.off('scroll', onScroll)
-      gsap.ticker.remove(tickerFn)
+      lenis.off('scroll', ScrollTrigger.update)
       lenis.destroy()
       ScrollTrigger.getAll().forEach((st) => st.kill())
     }
@@ -95,5 +102,3 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
   const api = useMemo<ScrollApi>(() => ({ lenis: lenisRef.current }), [])
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>
 }
-
-
