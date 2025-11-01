@@ -1,0 +1,62 @@
+name: Project Manager Check
+
+on:
+  schedule:
+    # Kjør hver 24. time (juster schedule etter behov)
+    - cron: '0 * * * *'  # Format: minutt time dag måned ukedag
+  workflow_dispatch:  # La oss også kunne kjøre manuelt
+
+permissions:
+  contents: read
+
+jobs:
+  pm-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Read agent-log
+        id: read-log
+        run: |
+          if [ -f "agent-log.json" ]; then
+            echo "Found agent-log.json"
+            # Tell åpne issues
+            OPEN_ISSUES=$(cat agent-log.json | grep -o '"status": "open"' | wc -l | tr -d ' ')
+            echo "open_issues=$OPEN_ISSUES" >> $GITHUB_OUTPUT
+            
+            # Tell kritiske issues
+            CRITICAL=$(cat agent-log.json | grep -A1 '"severity": "critical"' | grep -c '"status": "open"' || true)
+            echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          else
+            echo "agent-log.json not found"
+            echo "open_issues=0" >> $GITHUB_OUTPUT
+            echo "critical=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Report Status
+        run: |
+          echo "## 📊 Project Manager Check - $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Åpne issues:** ${{ steps.read-log.outputs.open_issues }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Kritiske issues:** ${{ steps.read-log.outputs.critical }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.read-log.outputs.critical }}" -gt 0 ]; then
+            echo "⚠️ **ADVARSEL:** Kritiske issues funnet som krever umiddelbar oppmerksomhet!" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.read-log.outputs.open_issues }}" -gt 0 ]; then
+            echo "✅ Noen åpne issues, men ingen kritiske." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🎉 Alle issues er løst!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment on commit (optional)
+        if: failure() && github.event_name == 'schedule'
+        run: |
+          echo "Kunne ikke fullføre PM-check"
+          # Her kan du legge til automatisk comment på commit/PR hvis nødvendig

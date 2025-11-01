@@ -34,14 +34,26 @@ export function Anim({ value, children }: CommonProps) {
       const media = el.querySelector('[data-parallax]') as HTMLElement | null
       gsap.fromTo(
         el,
-        { autoAlpha: 0 },
-        { autoAlpha: 1, duration: 1.2, scrollTrigger: { trigger: el, start: 'top 80%' } },
+        { autoAlpha: 0, y: 30 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 1.2,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 80%', toggleActions: 'play none none reverse' },
+        },
       )
       if (media) {
         gsap.to(media, {
-          yPercent: -20,
+          yPercent: -25,
+          scale: 1.05,
           ease: 'none',
-          scrollTrigger: { trigger: el, scrub: true },
+          scrollTrigger: {
+            trigger: el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
         })
       }
     }
@@ -83,11 +95,33 @@ export function Anim({ value, children }: CommonProps) {
       const layers = Array.from(el.querySelectorAll<HTMLElement>('[data-layer]'))
       layers.forEach((layer) => {
         const speed = Number(layer.dataset.speed || '0.2')
+        layer.style.willChange = 'transform'
         gsap.to(layer, {
           yPercent: -speed * 100,
+          scale: 1 + speed * 0.1,
           ease: 'none',
-          willChange: 'transform',
-          scrollTrigger: { trigger: el, scrub: true },
+          scrollTrigger: {
+            trigger: el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        })
+      })
+      // Also handle images without data-layer for gallery effects
+      const images = Array.from(el.querySelectorAll<HTMLElement>('img:not([data-layer])'))
+      images.forEach((img, i) => {
+        const speed = 0.15 + (i % 3) * 0.1
+        gsap.to(img, {
+          yPercent: -speed * 100,
+          scale: 1 + speed * 0.15,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
         })
       })
     }
@@ -140,6 +174,53 @@ export function Anim({ value, children }: CommonProps) {
       })
     }
 
+    // fade-in-sequence+audio-on-hover: staggered fade-in for children, audio on hover
+    if (preset.startsWith('fade-in-sequence+audio-on-hover')) {
+      const children = Array.from(el.children) as HTMLElement[]
+      children.forEach((child, i) => {
+        gsap.fromTo(
+          child,
+          { autoAlpha: 0, y: 30 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: child,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+            },
+            delay: i * 0.15,
+          },
+        )
+        // Audio on hover
+        const audio = child.querySelector('audio') as HTMLAudioElement | null
+        if (audio) {
+          child.addEventListener('mouseenter', () => {
+            audio.volume = 0.3
+            audio.play().catch(() => {})
+          })
+          child.addEventListener('mouseleave', () => {
+            audio.pause()
+          })
+        }
+      })
+    }
+
+    // interactive-slider+dynamic-projection
+    if (preset.startsWith('interactive-slider+dynamic-projection')) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top center',
+        end: 'bottom center',
+        onUpdate: (self) => {
+          const p = self.progress
+          el.dispatchEvent(new CustomEvent('projection:change', { detail: { progress: p }, bubbles: true }))
+        },
+      })
+    }
+
     return () => killAll()
   }, [preset])
 
@@ -154,10 +235,229 @@ export function Fx({ value, children }: CommonProps) {
   const v = (value ?? '').toLowerCase()
   const speed = v.includes('slow') ? 1.0 : v.includes('fast') ? 0.3 : 0.6
   const dir = v.includes('left') ? -16 : v.includes('right') ? 16 : 0
+  const ref = useRef<HTMLDivElement>(null)
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  if (v.startsWith('fade-in')) {
+  // Scroll-triggered effects using GSAP
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || prefersReducedMotion) return
+
+    // slow zoom + ambient sound fade-in
+    if (v.includes('slow zoom') && v.includes('ambient sound')) {
+      const media = el.querySelector('img, video') as HTMLElement | null
+      if (media) {
+        gsap.fromTo(
+          media,
+          { scale: 1, opacity: 0.5 },
+          {
+            scale: 1.1,
+            opacity: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true,
+            },
+          },
+        )
+      }
+    }
+
+    // glitch effect on scroll
+    if (v.includes('glitch') && v.includes('scroll')) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 80%',
+        end: 'bottom 20%',
+        scrub: true,
+        onUpdate: (self) => {
+          const p = self.progress
+          if (p > 0.1 && p < 0.9) {
+            const intensity = Math.sin(p * Math.PI * 4) * 0.5
+            gsap.set(el, {
+              x: intensity * 2,
+              filter: `hue-rotate(${intensity * 10}deg)`,
+            })
+          } else {
+            gsap.set(el, { x: 0, filter: 'none' })
+          }
+        },
+      })
+    }
+
+    // text highlight on scroll
+    if (v.includes('text highlight') && v.includes('scroll')) {
+      el.style.backgroundImage = 'linear-gradient(90deg, rgba(250,204,21,0.4), rgba(250,204,21,0.4))'
+      el.style.backgroundRepeat = 'no-repeat'
+      el.style.backgroundSize = '0% 100%'
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 80%',
+        end: 'bottom 20%',
+        scrub: true,
+        onUpdate: (self) => {
+          const p = self.progress
+          el.style.backgroundSize = `${p * 100}% 100%`
+        },
+      })
+    }
+
+    // surreal transition - images blend and morph
+    if (v.includes('surreal transition') || v.includes('blend and morph')) {
+      const images = Array.from(el.querySelectorAll('img')) as HTMLElement[]
+      images.forEach((img, i) => {
+        gsap.fromTo(
+          img,
+          { opacity: 0, scale: 0.8, filter: 'blur(10px)' },
+          {
+            opacity: 1,
+            scale: 1,
+            filter: 'blur(0px)',
+            duration: 1.5,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: img,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+            },
+            delay: i * 0.3,
+          },
+        )
+      })
+    }
+
+    // visual echo effect - images repeat and fade
+    if (v.includes('visual echo') || v.includes('repeat and fade')) {
+      const images = Array.from(el.querySelectorAll('img')) as HTMLElement[]
+      images.forEach((img) => {
+        ScrollTrigger.create({
+          trigger: img,
+          start: 'top 80%',
+          end: 'bottom 20%',
+          scrub: true,
+          onUpdate: (self) => {
+            const p = self.progress
+            img.style.opacity = String(p)
+            img.style.transform = `scale(${1 + p * 0.1})`
+          },
+        })
+      })
+    }
+
+    // text overlay pulsates
+    if (v.includes('pulsates') || v.includes('text overlay')) {
+      gsap.to(el, {
+        opacity: 0.7,
+        scale: 1,
+        duration: 1,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 80%',
+          toggleActions: 'play none none pause reverse',
+        },
+      })
+      gsap.to(el, {
+        opacity: 1,
+        scale: 1.05,
+        duration: 1,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        delay: 0.5,
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 80%',
+          toggleActions: 'play none none pause reverse',
+        },
+      })
+    }
+
+    // screen close animation, light dims
+    if (v.includes('screen close') || v.includes('light dims')) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true,
+        onUpdate: (self) => {
+          const p = self.progress
+          gsap.set(el, {
+            opacity: 1 - p * 0.8,
+            filter: `brightness(${1 - p * 0.5})`,
+          })
+        },
+      })
+    }
+
+    // subtle digital noise
+    if (v.includes('digital noise') || v.includes('servers humming')) {
+      const noiseOverlay = document.createElement('div')
+      noiseOverlay.style.cssText = `
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.03;
+        background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px);
+        mix-blend-mode: overlay;
+      `
+      el.style.position = 'relative'
+      el.appendChild(noiseOverlay)
+      gsap.to(noiseOverlay, {
+        opacity: 0.06,
+        duration: 1.5,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+      })
+    }
+
+    // screen fades to complete black
+    if (v.includes('fades to complete black') || v.includes('fade to black')) {
+      const overlay = document.createElement('div')
+      overlay.style.cssText = `
+        position: absolute;
+        inset: 0;
+        background: black;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 9999;
+      `
+      el.style.position = 'relative'
+      el.appendChild(overlay)
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top center',
+        end: 'bottom top',
+        scrub: true,
+        onUpdate: (self) => {
+          overlay.style.opacity = String(self.progress)
+        },
+      })
+    }
+
+    // final fade out
+    if (v.includes('final fade out')) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top center',
+        end: 'bottom top',
+        scrub: true,
+        onUpdate: (self) => {
+          gsap.set(el, { opacity: 1 - self.progress })
+        },
+      })
+    }
+  }, [v, prefersReducedMotion])
+
+  // Framer Motion effects (for non-scroll-triggered)
+  if (v.startsWith('fade-in') && !v.includes('scroll')) {
     return (
-      <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: speed }}>
+      <motion.div ref={ref} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: speed }}>
         {children}
       </motion.div>
     )
@@ -165,15 +465,16 @@ export function Fx({ value, children }: CommonProps) {
 
   if (v.startsWith('slide-in')) {
     return (
-      <motion.div initial={{ opacity: 0, x: dir }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: speed }}>
+      <motion.div ref={ref} initial={{ opacity: 0, x: dir }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: speed }}>
         {children}
       </motion.div>
     )
   }
 
-  if (v.startsWith('glitch')) {
+  if (v.startsWith('glitch') && !v.includes('scroll')) {
     return (
       <motion.div
+        ref={ref}
         style={{ willChange: 'transform, filter' }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -186,10 +487,16 @@ export function Fx({ value, children }: CommonProps) {
     )
   }
 
-  if (v.startsWith('text-highlight')) {
+  if (v.startsWith('text-highlight') && !v.includes('scroll')) {
     return (
-      <motion.span initial={{ backgroundSize: '0% 100%' }} whileInView={{ backgroundSize: '100% 100%' }} viewport={{ once: true }} transition={{ duration: 1 }}
-        style={{ backgroundImage: 'linear-gradient(90deg, rgba(250,204,21,0.4), rgba(250,204,21,0.4))', backgroundRepeat: 'no-repeat' }}>
+      <motion.span
+        ref={ref}
+        initial={{ backgroundSize: '0% 100%' }}
+        whileInView={{ backgroundSize: '100% 100%' }}
+        viewport={{ once: true }}
+        transition={{ duration: 1 }}
+        style={{ backgroundImage: 'linear-gradient(90deg, rgba(250,204,21,0.4), rgba(250,204,21,0.4))', backgroundRepeat: 'no-repeat' }}
+      >
         {children}
       </motion.span>
     )
@@ -197,7 +504,7 @@ export function Fx({ value, children }: CommonProps) {
 
   if (v.startsWith('visual-split')) {
     return (
-      <motion.div initial={{ clipPath: 'inset(0 50% 0 0)' }} whileInView={{ clipPath: 'inset(0 0% 0 0)' }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+      <motion.div ref={ref} initial={{ clipPath: 'inset(0 50% 0 0)' }} whileInView={{ clipPath: 'inset(0 0% 0 0)' }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
         {children}
       </motion.div>
     )
@@ -205,14 +512,14 @@ export function Fx({ value, children }: CommonProps) {
 
   if (v.startsWith('typewriter-effect+reveal-sequence')) {
     return (
-      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.3 }}>
+      <motion.div ref={ref} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.3 }}>
         {children}
       </motion.div>
     )
   }
 
-  // default
-  return <div>{children}</div>
+  // Default wrapper for scroll-triggered effects
+  return <div ref={ref}>{children}</div>
 }
 
 import HumansVsBots from '../graphs/HumansVsBots'

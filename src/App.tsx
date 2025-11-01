@@ -6,6 +6,7 @@ import ParallaxSlowDown from './components/utils/ParallaxSlowDown'
 import ChatInterface from './components/interactive/ChatInterface'
 import EliasController from './components/elias/EliasController'
 import EliasCue from './components/elias/EliasCue'
+import AgentLogToggle from './components/log/AgentLogToggle'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Article components={{ Anim, Fx, Graph, Media, EliasCue, ParallaxSlowDown, ChatInterface }} />
         </main>
         <EliasController />
+        <AgentLogToggle />
       </div>
     </HelmetProvider>
   )
