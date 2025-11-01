@@ -56,6 +56,7 @@ export function Anim({ value, children }: CommonProps) {
           },
         })
       }
+      ScrollTrigger.refresh()
     }
 
     // sticky-graph+count-up
@@ -124,6 +125,7 @@ export function Anim({ value, children }: CommonProps) {
           },
         })
       })
+      ScrollTrigger.refresh()
     }
 
     // cascade-animation+auto-play-on-entry
@@ -172,6 +174,7 @@ export function Anim({ value, children }: CommonProps) {
           window.dispatchEvent(new CustomEvent('anim:progress', { detail: { progress: p } }))
         },
       })
+      ScrollTrigger.refresh()
     }
 
     // fade-in-sequence+audio-on-hover: staggered fade-in for children, audio on hover

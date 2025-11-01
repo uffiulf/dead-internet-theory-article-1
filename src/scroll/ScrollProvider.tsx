@@ -40,6 +40,9 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
 
     ScrollTrigger.defaults({ scroller: document.body })
 
+    // Refresh ScrollTrigger after Lenis is set up
+    setTimeout(() => ScrollTrigger.refresh(), 100)
+
     // RAF loop for Lenis
     function raf(time: number) {
       lenis.raf(time)
@@ -52,10 +55,20 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     gsap.ticker.add(tickerFn)
     gsap.ticker.lagSmoothing(0)
 
+    // Refresh ScrollTrigger on window resize
+    const handleResize = () => {
+      ScrollTrigger.refresh()
+    }
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', handleResize)
+
     return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
       lenis.off('scroll', onScroll)
       gsap.ticker.remove(tickerFn)
       lenis.destroy()
+      ScrollTrigger.getAll().forEach((st) => st.kill())
     }
   }, [])
 

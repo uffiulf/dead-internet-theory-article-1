@@ -51,6 +51,9 @@ export default function ParallaxHero() {
           scrub: true,
         },
       })
+      
+      // Refresh ScrollTrigger after setting up animations
+      ScrollTrigger.refresh()
     }, section)
 
     return () => ctx.revert()
