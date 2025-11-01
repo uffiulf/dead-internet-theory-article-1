@@ -127,8 +127,8 @@ export function Anim({ value, children }: CommonProps) {
         const speed = Number(layer.dataset.speed || '0.2')
         layer.style.willChange = 'transform'
         const anim = gsap.to(layer, {
-          yPercent: -speed * 150,
-          scale: 1 + speed * 0.2,
+          yPercent: -speed * 200,
+          scale: 1 + speed * 0.3,
           ease: 'none',
           scrollTrigger: {
             trigger: el,
@@ -141,14 +141,14 @@ export function Anim({ value, children }: CommonProps) {
         if (anim.scrollTrigger) triggers.push(anim.scrollTrigger)
       })
       
-      // Auto-parallax for images
+      // Auto-parallax for images with stronger effect
       const images = Array.from(el.querySelectorAll<HTMLElement>('img:not([data-layer])'))
       images.forEach((img, i) => {
-        const speed = 0.2 + (i % 3) * 0.15
+        const speed = 0.25 + (i % 3) * 0.2
         img.style.willChange = 'transform'
         const anim = gsap.to(img, {
-          yPercent: -speed * 150,
-          scale: 1 + speed * 0.2,
+          yPercent: -speed * 200,
+          scale: 1 + speed * 0.25,
           ease: 'none',
           scrollTrigger: {
             trigger: el,
@@ -159,6 +159,26 @@ export function Anim({ value, children }: CommonProps) {
           },
         })
         if (anim.scrollTrigger) triggers.push(anim.scrollTrigger)
+      })
+      
+      // Also animate paragraphs with subtle parallax
+      const paragraphs = Array.from(el.querySelectorAll<HTMLElement>('p'))
+      paragraphs.forEach((p, i) => {
+        if (i % 2 === 0) {
+          p.style.willChange = 'transform'
+          const anim = gsap.to(p, {
+            y: -20 * (i % 3),
+            ease: 'none',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 1,
+              markers: false,
+            },
+          })
+          if (anim.scrollTrigger) triggers.push(anim.scrollTrigger)
+        }
       })
     }
 
