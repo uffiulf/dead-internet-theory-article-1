@@ -36,12 +36,31 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
       getBoundingClientRect() {
         return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight }
       },
+      // Add scrollHeight for proper calculation
+      scrollHeight() {
+        return document.documentElement.scrollHeight
+      },
     })
 
     ScrollTrigger.defaults({ scroller: document.body })
 
-    // Refresh ScrollTrigger after Lenis is set up
-    setTimeout(() => ScrollTrigger.refresh(), 100)
+    // Wait for DOM to be ready, then refresh ScrollTrigger
+    const refreshScrollTrigger = () => {
+      // Wait a bit for all components to mount
+      setTimeout(() => {
+        ScrollTrigger.refresh()
+      }, 200)
+    }
+    
+    // Initial refresh after setup
+    refreshScrollTrigger()
+    
+    // Also refresh when DOM is ready
+    if (document.readyState === 'complete') {
+      refreshScrollTrigger()
+    } else {
+      window.addEventListener('load', refreshScrollTrigger)
+    }
 
     // RAF loop for Lenis
     function raf(time: number) {
@@ -65,6 +84,7 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('orientationchange', handleResize)
+      window.removeEventListener('load', refreshScrollTrigger)
       lenis.off('scroll', onScroll)
       gsap.ticker.remove(tickerFn)
       lenis.destroy()
