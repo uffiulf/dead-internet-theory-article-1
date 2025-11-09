@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 export default function Flowchart() {
   const ref = useRef<SVGSVGElement>(null)
@@ -9,6 +15,26 @@ export default function Flowchart() {
     const width = 640
     const height = 240
     svg.attr('viewBox', `0 0 ${width} ${height}`)
+    
+    // Fade in on scroll
+    const container = svg.node()?.parentElement
+    if (container) {
+      gsap.fromTo(
+        container,
+        { autoAlpha: 0, y: 30 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: container,
+            start: 'top 85%',
+            toggleActions: 'play none none reverse',
+          },
+        },
+      )
+    }
 
     const nodes = [
       { x: 40, y: 120, label: 'Bot creates' },
@@ -38,8 +64,8 @@ export default function Flowchart() {
     }
 
     const host = svg.node()?.parentElement
-    host?.addEventListener('graph:enter', onEnter as any)
-    return () => host?.removeEventListener('graph:enter', onEnter as any)
+    host?.addEventListener('graph:enter', onEnter as EventListener)
+    return () => host?.removeEventListener('graph:enter', onEnter as EventListener)
   }, [])
 
   return <svg ref={ref} className="my-4 w-full" role="img" aria-label="Flowchart engagement-farming" />

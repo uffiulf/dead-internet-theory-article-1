@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { EliasCueEventDetail } from '../../types/events'
 import EliasOverlay from './EliasOverlay'
 import EliasPortal from './EliasPortal'
 
@@ -13,11 +14,12 @@ export default function EliasController() {
 
   useEffect(() => {
     const onCue = (e: Event) => {
-      const d = (e as CustomEvent).detail as Cue
+      const customEvent = e as CustomEvent<EliasCueEventDetail>
+      const d = customEvent.detail as Cue
       setCues((prev) => [...prev, d].sort((a, b) => a.at - b.at))
     }
-    window.addEventListener('elias:cue', onCue as any)
-    return () => window.removeEventListener('elias:cue', onCue as any)
+    window.addEventListener('elias:cue', onCue as EventListener)
+    return () => window.removeEventListener('elias:cue', onCue as EventListener)
   }, [])
 
   // Compute chapter progress using headings as anchors
@@ -87,7 +89,9 @@ function duckAudio(duck: boolean) {
   audios.forEach((a) => {
     try {
       a.volume = duck ? Math.max(0, Math.min(1, a.volume * 0.25)) : Math.min(1, a.volume / 0.25)
-    } catch {}
+    } catch (error) {
+      console.warn('[EliasController] Failed to adjust audio volume:', error)
+    }
   })
 }
 

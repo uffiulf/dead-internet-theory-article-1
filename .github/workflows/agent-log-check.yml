@@ -1,0 +1,57 @@
+name: Agent Log Check
+
+on:
+  schedule:
+    # Kjør hvert 30. minutt
+    - cron: '*/30 * * * *'  # Format: minutt time dag måned ukedag
+  workflow_dispatch:  # La oss også kunne kjøre manuelt
+
+permissions:
+  contents: read
+
+jobs:
+  agent-log-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Agent Log Status Check
+        id: status-check
+        run: |
+          echo "## 📊 Agent Log Check - $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run status check and capture output
+          npm run pm:status >> $GITHUB_STEP_SUMMARY 2>&1
+          EXIT_CODE=$?
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Report Results
+        run: |
+          EXIT_CODE="${{ steps.status-check.outputs.exit_code }}"
+          
+          if [ "$EXIT_CODE" = "1" ]; then
+            echo "⚠️ **Kritiske issues funnet** - Se detaljer i output over." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🔍 Sjekk agent-log.json for detaljer om kritiske findings." >> $GITHUB_STEP_SUMMARY
+          elif [ "$EXIT_CODE" = "0" ]; then
+            echo "✅ **Status OK** - Ingen kritiske issues funnet." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Feil under sjekk** - Se output for detaljer." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Exit with the same code as status check
+          exit $EXIT_CODE
+

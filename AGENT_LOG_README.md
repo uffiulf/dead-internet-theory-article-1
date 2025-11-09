@@ -14,6 +14,33 @@ Systemet består av:
 
 Klikk på den blå "Agent Log" knappen i nedre høyre hjørne av nettsiden for å åpne logg-visningen.
 
+## Automatisk Agent Log Check
+
+Systemet har en automatisk scheduled check som kjører **hvert 30. minutt** for å overvåke prosjektstatus.
+
+### GitHub Actions Workflow
+
+**Fil:** `.github/workflows/agent-log-check.yml`
+
+Workflow-en kjører automatisk hvert 30. minutt og:
+- Leser `agent-log.json` for å sjekke åpne issues
+- Identifiserer kritiske findings
+- Rapporterer status i GitHub Actions summary
+- Returnerer exit code 1 hvis kritiske issues finnes
+
+**Se resultater:**
+1. Gå til "Actions" tab i GitHub repository
+2. Velg "Agent Log Check" workflow
+3. Se siste kjøring for status og detaljer
+
+**Manuell kjøring:**
+- Gå til "Actions" → "Agent Log Check" → "Run workflow"
+- Eller bruk `npm run pm:status` lokalt for samme sjekk
+
+**Cron schedule:**
+- `*/30 * * * *` - Hvert 30. minutt
+- Kan endres i `.github/workflows/agent-log-check.yml` hvis nødvendig
+
 ## Brukerveiledning
 
 Denne filen dokumenterer hvordan man bruker `agent-log.json` for å loggefere arbeid fra forskjellige agenter på prosjektet.
@@ -176,6 +203,7 @@ Når du legger til ny entry, husk å oppdatere:
 4. **Være spesifikk:** Inkluder filnavn, linjenumre, detaljerte beskrivelser
 5. **Oppdater statistikk:** Oppdater `statistics`-seksjonen hvis nødvendig
 6. **Valid JSON:** Sørg for at filen er gyldig JSON (bruk validator hvis usikker)
+- **Kjør lint før logg:** Kjør `npm run lint` og sørg for grønn status før nye entries loggføres
 
 ## Verktøy for å legge til entries
 
@@ -209,8 +237,15 @@ jq '.entries[].findings[] | select(.severity == "critical")' agent-log.json
 ## Visning i Nettsiden
 
 Agent loggfilen vises automatisk i nettsiden når du:
-1. Kopierer `agent-log.json` til `public/agent-log.json` (skjer automatisk ved build)
+1. Synkroniserer `agent-log.json` til `public/agent-log.json` (skjer automatisk ved build via `prebuild` script)
 2. Åpner nettsiden og klikker på "Agent Log" knappen i nedre høyre hjørne
+
+### Automatisk Synkronisering
+
+Filen `agent-log.json` synkroniseres automatisk til `public/agent-log.json`:
+- **Ved build:** Kjører automatisk via `prebuild` script før `npm run build`
+- **Manuelt:** Kjør `npm run sync-agent-log` for å synkronisere umiddelbart
+- **Under utvikling:** Filen må være synkronisert for at endringer skal vises i nettleseren
 
 ### Funksjoner i Visningen
 
@@ -250,7 +285,7 @@ Systemet støtter forskjellige agent-typer med egne farger:
 - **Dokumenter tid:** Legg til `timeSpent` hvis relevant
 - **Neste steg:** Anbefal konkrete neste steg i `nextSteps`
 - **Kommentarer:** Bruk `comments` for kontekstuelle notater (fungerer som commit-meldinger)
-- **Oppdater public/:** Husk å kopiere `agent-log.json` til `public/` etter oppdateringer (eller konfigurer build-script)
+- **Synkroniser fil:** Kjør `npm run sync-agent-log` etter oppdateringer, eller vent til build (skjer automatisk)
 
 ## Agent-spesialisering
 

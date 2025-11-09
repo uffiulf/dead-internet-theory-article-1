@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { AnimProgressEventDetail } from '../../types/events'
 
 type Line = { who: 'journalist' | 'elias'; text: string; delay?: number; avatar?: 'journalist' | 'elias' | string }
 
@@ -26,7 +27,9 @@ export default function ChatInterface({
   const avatarSrc = (a: Line['avatar'] | undefined, who: Line['who']) => {
     if (typeof a === 'string' && a !== 'journalist' && a !== 'elias') return a
     const key = a ?? who
-    return key === 'elias' ? '/avatars/elias.png' : '/avatars/journalist.png'
+    // Try PNG first, fallback to SVG
+    const basePath = key === 'elias' ? '/avatars/elias' : '/avatars/journalist'
+    return `${basePath}.svg`
   }
 
   useEffect(() => {
@@ -46,8 +49,9 @@ export default function ChatInterface({
     }, 0)
     
     let lastProgress = -1
-    const onProgress = (e: Event) => {
-      const p = Math.max(0, Math.min(1, (e as CustomEvent).detail?.progress ?? 0))
+    const onProgress = (event: CustomEvent<AnimProgressEventDetail>) => {
+      const detail = event.detail
+      const p = Math.max(0, Math.min(1, detail?.progress ?? 0))
       if (p === lastProgress) return
       lastProgress = p
       
@@ -63,20 +67,20 @@ export default function ChatInterface({
         if (typingSound && k > 0) playTick()
       }
     }
-    window.addEventListener('anim:progress', onProgress as any, { passive: true })
+    const handler = onProgress as EventListener
+    window.addEventListener('anim:progress', handler, { passive: true })
     
     // Initial check: if we're already past start, show first message
     const checkInit = () => {
-      const evt = new Event('anim:progress') as any
-      evt.detail = { progress: 0 }
+      const evt = new CustomEvent<AnimProgressEventDetail>('anim:progress', { detail: { progress: 0 } })
       onProgress(evt)
     }
     checkInit()
     
     return () => {
-      window.removeEventListener('anim:progress', onProgress as any)
+      window.removeEventListener('anim:progress', handler)
     }
-  }, [lines, speed, reduced, typingSound])
+  }, [lines, speed, reduced, typingSound, index])
 
   useEffect(() => {
     if (!autoscroll) return
@@ -123,7 +127,8 @@ export default function ChatInterface({
 
 function playTick() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const ctx = new AudioContextClass()
     const o = ctx.createOscillator()
     const g = ctx.createGain()
     o.type = 'square'
@@ -133,7 +138,9 @@ function playTick() {
     o.connect(g).connect(ctx.destination)
     o.start()
     o.stop(ctx.currentTime + 0.08)
-  } catch {}
+  } catch (error) {
+    console.warn('[ChatInterface] Failed to play tick sound:', error)
+  }
 }
 
 

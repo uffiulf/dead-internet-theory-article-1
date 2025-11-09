@@ -1,11 +1,17 @@
 import { useEffect } from 'react'
 
+declare global {
+  interface Window {
+    __lenis_speed?: number
+  }
+}
+
 export default function ParallaxSlowDown() {
   useEffect(() => {
-    const original = (window as any).__lenis_speed || 1
-    ;(window as any).__lenis_speed = 0.6
+    const original = window.__lenis_speed ?? 1
+    window.__lenis_speed = 0.6
     return () => {
-      ;(window as any).__lenis_speed = original
+      window.__lenis_speed = original
     }
   }, [])
   return null

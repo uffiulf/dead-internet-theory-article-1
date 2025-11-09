@@ -1,5 +1,7 @@
-import type { Plugin } from 'unified'
+import type { Plugin, Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
+import type { Root, Paragraph, Text, Parent, RootContent } from 'mdast'
+import type { MDXJsxFlowElement, MDXJsxAttribute } from 'mdast-util-mdx'
 
 // Transforms lines like:
 // [ANIM:start parallax+fade-in hero]
@@ -8,90 +10,107 @@ import { visit } from 'unist-util-visit'
 // [MEDIA: photo "Shrimp Jesus" - ...]
 // into MDX JSX elements: <Anim value="start parallax+fade-in hero" /> etc.
 
-export const remarkDirectives: Plugin = () => {
-  return (tree: any) => {
+const createAttribute = (name: string, value: string): MDXJsxAttribute => ({
+  type: 'mdxJsxAttribute',
+  name,
+  value,
+})
+
+const toElement = (name: string, value: string): MDXJsxFlowElement => ({
+  type: 'mdxJsxFlowElement',
+  name,
+  attributes: [createAttribute('value', value)],
+  children: [],
+})
+
+export const remarkDirectives: Plugin<[], Root> = () => {
+  const transformer: Transformer<Root> = (tree) => {
     // Simple inline single-line directives (FX/GRAPH/MEDIA and ANIM single)
-    (visit as any)(tree, 'paragraph', (node: any, index: any, parent: any) => {
+    visit(tree, 'paragraph', (node: Paragraph, index, parent) => {
       if (!parent || index == null) return
       if (!node.children || node.children.length !== 1) return
-      const child = node.children[0]
-      if (child.type !== 'text') return
-      const text: string = child.value.trim()
+      const child = node.children[0] as Text | undefined
+      if (!child || child.type !== 'text') return
+      const text = child.value.trim()
       // ANIM/FX/GRAPH/MEDIA
-      const match = text.match(/^\[(ANIM|FX|GRAPH|MEDIA):\s*(.+)\]$/i)
+      const match = text.match(/\[(ANIM|FX|GRAPH|MEDIA):\s*(.+)]$/i)
       if (!match) return
       const kind = match[1].toUpperCase()
       const value = match[2].trim()
       const name = kind === 'ANIM' ? 'Anim' : kind === 'FX' ? 'Fx' : kind === 'GRAPH' ? 'Graph' : 'Media'
 
-      parent.children.splice(index, 1, {
-        type: 'mdxJsxFlowElement',
-        name,
-        attributes: [
-          { type: 'mdxJsxAttribute', name: 'value', value },
-        ],
-        children: [],
-      })
+      const replacement = toElement(name, value)
+      ;(parent as Parent).children?.splice(index, 1, replacement as unknown as RootContent)
     })
 
     // ELIAS cues, as block paragraphs
-    ;(visit as any)(tree, 'paragraph', (node: any, index: any, parent: any) => {
+    visit(tree, 'paragraph', (node: Paragraph, index, parent) => {
       if (!parent || index == null) return
       if (!node.children || node.children.length !== 1) return
-      const child = node.children[0]
-      if (child.type !== 'text') return
-      const t: string = child.value.trim()
-      const m = t.match(/^\[ELIAS:\s*(appear|whisper|hide|takeover)\s+at=([0-9]+(?:\.[0-9]+)?)\s*(?:text=\"([^\"]*)\")?\]$/i)
-      if (!m) return
-      const mode = m[1].toLowerCase()
-      const at = m[2]
-      const text = m[3] ?? ''
-      parent.children.splice(index, 1, {
+      const child = node.children[0] as Text | undefined
+      if (!child || child.type !== 'text') return
+      const textValue = child.value.trim()
+      const match = textValue.match(/\[ELIAS:\s*(appear|whisper|hide|takeover)\s+at=([0-9]+(?:\.[0-9]+)?)\s*(?:text="([^"]*)")?]$/i)
+      if (!match) return
+      const mode = match[1].toLowerCase()
+      const at = match[2]
+      const text = match[3] ?? ''
+
+      const replacement: MDXJsxFlowElement = {
         type: 'mdxJsxFlowElement',
         name: 'EliasCue',
         attributes: [
-          { type: 'mdxJsxAttribute', name: 'mode', value: mode },
-          { type: 'mdxJsxAttribute', name: 'at', value: at },
-          { type: 'mdxJsxAttribute', name: 'text', value: text },
+          createAttribute('mode', mode),
+          createAttribute('at', at),
+          createAttribute('text', text),
         ],
         children: [],
-      })
+      }
+      ;(parent as Parent).children?.splice(index, 1, replacement as unknown as RootContent)
     })
 
     // Range wrapping for ANIM:start ... ANIM:end
-    const children = (tree.children ?? []) as any[]
+    const children = [...(tree.children ?? [])] as RootContent[]
     let i = 0
     while (i < children.length) {
-      const node = children[i]
-      if (node.type === 'paragraph' && node.children && node.children[0] && node.children[0].type === 'text') {
-        const txt = String(node.children[0].value).trim()
-        const start = txt.match(/^\[ANIM:start\s+(.+)]$/i)
-        if (start) {
-          const value = start[1]
-          // find end
-          let j = i + 1
-          let endIndex = -1
-          while (j < children.length) {
-            const n = children[j]
-            if (n.type === 'paragraph' && n.children && n.children[0] && n.children[0].type === 'text') {
-              const t2 = String(n.children[0].value).trim()
-              if (/^\[ANIM:end\]$/i.test(t2)) { endIndex = j; break }
+      const current = children[i]
+      if (current?.type === 'paragraph') {
+        const paragraph = current as Paragraph
+        const firstChild = paragraph.children?.[0] as Text | undefined
+        const txt = firstChild?.value?.trim()
+        if (txt) {
+          const start = txt.match(/\[ANIM:start\s+(.+)]$/i)
+          if (start) {
+            const value = start[1]
+            let j = i + 1
+            let endIndex = -1
+            while (j < children.length) {
+              const candidate = children[j]
+              if (candidate?.type === 'paragraph') {
+                const candidateParagraph = candidate as Paragraph
+                const candidateText = candidateParagraph.children?.[0] as Text | undefined
+                const t2 = candidateText?.value?.trim()
+                if (t2 && /\[ANIM:end]/i.test(t2)) {
+                  endIndex = j
+                  break
+                }
+              }
+              j++
             }
-            j++
-          }
-          if (endIndex !== -1) {
-            const between = children.slice(i + 1, endIndex)
-            const wrapped = {
-              type: 'mdxJsxFlowElement',
-              name: 'Anim',
-              attributes: [{ type: 'mdxJsxAttribute', name: 'value', value }],
-              children: between,
+
+            if (endIndex !== -1) {
+              const between = children.slice(i + 1, endIndex)
+              const wrapped: MDXJsxFlowElement = {
+                type: 'mdxJsxFlowElement',
+                name: 'Anim',
+                attributes: [createAttribute('value', value)],
+                children: between,
+              }
+              children.splice(i, endIndex - i + 1, wrapped as unknown as RootContent)
+              continue
+            } else {
+              console.warn('[remark-directives] Unbalanced ANIM:start without end for value:', value)
             }
-            // replace [start, ..., end] with wrapped
-            children.splice(i, endIndex - i + 1, wrapped)
-            continue // process next
-          } else {
-            console.warn('[remark-directives] Unbalanced ANIM:start without end for value:', value)
           }
         }
       }
@@ -99,6 +118,8 @@ export const remarkDirectives: Plugin = () => {
     }
     tree.children = children
   }
+
+  return transformer
 }
 
 export default remarkDirectives

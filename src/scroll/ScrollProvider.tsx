@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
@@ -26,6 +27,7 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     const onScroll = () => ScrollTrigger.update()
     lenis.on('scroll', onScroll)
 
+    // Configure ScrollTrigger to work with Lenis
     ScrollTrigger.scrollerProxy(document.body, {
       scrollTop(value) {
         if (arguments.length && typeof value === 'number') {
@@ -34,43 +36,58 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
         return lenis.scroll
       },
       getBoundingClientRect() {
-        return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight }
+        return {
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }
       },
-      // Add scrollHeight for proper calculation
       scrollHeight() {
         return document.documentElement.scrollHeight
       },
     })
 
+    // Set default scroller for ScrollTrigger
     ScrollTrigger.defaults({ scroller: document.body })
+    
+    // Important: Refresh ScrollTrigger after setting up the proxy
+    ScrollTrigger.refresh()
 
     // Wait for DOM to be ready, then refresh ScrollTrigger
     const refreshScrollTrigger = () => {
-      // Wait a bit for all components to mount
-      setTimeout(() => {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
         ScrollTrigger.refresh()
-      }, 200)
+      })
     }
     
+    const handleLoad = () => refreshScrollTrigger()
+    const handleDOMContentLoaded = () => refreshScrollTrigger()
+    
     // Initial refresh after setup
-    refreshScrollTrigger()
+    setTimeout(refreshScrollTrigger, 100)
     
     // Also refresh when DOM is ready
     if (document.readyState === 'complete') {
       refreshScrollTrigger()
     } else {
-      window.addEventListener('load', refreshScrollTrigger)
+      window.addEventListener('load', handleLoad)
+      document.addEventListener('DOMContentLoaded', handleDOMContentLoaded)
     }
 
-    // RAF loop for Lenis
+    // RAF loop for Lenis - integrated with GSAP ticker
     function raf(time: number) {
       lenis.raf(time)
       requestAnimationFrame(raf)
     }
     requestAnimationFrame(raf)
 
-    // Also use GSAP ticker for integration
-    const tickerFn = (t: number) => lenis.raf(t * 1000)
+    // Use GSAP ticker for better integration with ScrollTrigger
+    const tickerFn = (t: number) => {
+      lenis.raf(t * 1000)
+      ScrollTrigger.update()
+    }
     gsap.ticker.add(tickerFn)
     gsap.ticker.lagSmoothing(0)
 
@@ -84,11 +101,14 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('orientationchange', handleResize)
-      window.removeEventListener('load', refreshScrollTrigger)
+      window.removeEventListener('load', handleLoad)
+      document.removeEventListener('DOMContentLoaded', handleDOMContentLoaded)
       lenis.off('scroll', onScroll)
       gsap.ticker.remove(tickerFn)
       lenis.destroy()
+      // Clean up ScrollTrigger instances
       ScrollTrigger.getAll().forEach((st) => st.kill())
+      ScrollTrigger.clearScrollMemory()
     }
   }, [])
 

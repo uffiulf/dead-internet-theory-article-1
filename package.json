@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/copy-agent-log.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "pm:status": "node scripts/pm-status.js"
+    "pm:status": "node scripts/pm-status.js",
+    "sync-agent-log": "node scripts/copy-agent-log.js"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

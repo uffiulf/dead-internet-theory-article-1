@@ -7,6 +7,9 @@ import remarkSlug from 'remark-slug'
 import remarkAutolinkHeadings from 'remark-autolink-headings'
 import { remarkDirectives } from './src/mdx/remark-directives'
 import path from 'path'
+import type { PluggableList } from 'unified'
+
+const remarkPlugins: PluggableList = [remarkSlug, remarkAutolinkHeadings, remarkDirectives]
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -14,7 +17,7 @@ export default defineConfig({
   plugins: [
     react(),
     mdx({
-      remarkPlugins: [remarkSlug as any, remarkAutolinkHeadings as any, remarkDirectives as any],
+      remarkPlugins,
     }),
     svgr(),
     imagetools(),

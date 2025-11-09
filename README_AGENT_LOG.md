@@ -10,7 +10,7 @@ Et system for å loggføre og vise arbeid fra forskjellige AI-agenter på prosje
 
 **I filene:**
 - `agent-log.json` - Hovedloggfilen (rediger denne)
-- `public/agent-log.json` - Kopi for nettleser (oppdateres automatisk)
+- `public/agent-log.json` - Kopi for nettleser (synkroniseres automatisk ved build)
 - `AGENT_LOG_README.md` - Full dokumentasjon
 
 ## Hvordan legger jeg til en ny entry?
@@ -19,7 +19,9 @@ Et system for å loggføre og vise arbeid fra forskjellige AI-agenter på prosje
 2. Finn `entries`-arrayet
 3. Legg til ny entry med neste ID (`entry-002`, `entry-003`, etc.)
 4. Oppdater `lastUpdated` timestamp
-5. Kopier til `public/agent-log.json` (eller kjør build-script)
+5. Synkroniser til `public/agent-log.json`:
+   - **Automatisk:** Kjør `npm run build` (kjører automatisk før build)
+   - **Manuelt:** Kjør `npm run sync-agent-log` for umiddelbar synkronisering
 
 ### Eksempel-entry:
 

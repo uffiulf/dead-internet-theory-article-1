@@ -29,9 +29,17 @@ export function Anim({ value, children }: CommonProps) {
       return
     }
 
+    // Handle "start" and "end" markers - these are just containers
+    if (preset === 'start' || preset === 'end') {
+      // No animation needed, just a marker
+      return
+    }
+
     // parallax+fade-in hero
     if (preset.startsWith('parallax+fade-in')) {
       const media = el.querySelector('[data-parallax]') as HTMLElement | null
+      
+      // Fade in container
       gsap.fromTo(
         el,
         { autoAlpha: 0, y: 30 },
@@ -40,22 +48,58 @@ export function Anim({ value, children }: CommonProps) {
           y: 0,
           duration: 1.2,
           ease: 'power2.out',
-          scrollTrigger: { trigger: el, start: 'top 80%', toggleActions: 'play none none reverse' },
+          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
         },
       )
+      
+      // Parallax on media
       if (media) {
         gsap.to(media, {
-          yPercent: -25,
-          scale: 1.05,
+          yPercent: -30,
+          scale: 1.08,
           ease: 'none',
           scrollTrigger: {
             trigger: el,
             start: 'top bottom',
             end: 'bottom top',
-            scrub: true,
+            scrub: 1,
           },
         })
       }
+      
+      // Add parallax to all text paragraphs inside
+      const paragraphs = Array.from(el.querySelectorAll('p, h1, h2, h3, h4, h5, h6')) as HTMLElement[]
+      paragraphs.forEach((p, i) => {
+        gsap.fromTo(
+          p,
+          { autoAlpha: 0, y: 20 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: p,
+              start: 'top 90%',
+              toggleActions: 'play none none reverse',
+            },
+            delay: i * 0.1,
+          },
+        )
+        
+        // Subtle parallax on scroll
+        gsap.to(p, {
+          y: -10,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: p,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+          },
+        })
+      })
+      
       ScrollTrigger.refresh()
     }
 
@@ -153,11 +197,11 @@ export function Anim({ value, children }: CommonProps) {
         })
       }
       if (audio) {
-        const updateVolume = (self: any) => {
+        const updateVolume = (self: { progress: number }) => {
           const v = Math.max(0, 1 - self.progress)
           audio.volume = v
         }
-        ScrollTrigger.create({ trigger: el, start: 'top top', end: 'bottom top', scrub: true, onUpdate: updateVolume as any })
+        ScrollTrigger.create({ trigger: el, start: 'top top', end: 'bottom top', scrub: true, onUpdate: updateVolume })
       }
     }
 
